@@ -27,6 +27,9 @@ public class Hashtag {
     }
 
     public void addPostHashtag(PostHashtag postHashtag) {
+        if (this.postHashtags == null) {
+            this.postHashtags = new ArrayList<>();
+        }
         this.postHashtags.add(postHashtag);
         postHashtag.setHashtag(this);
     }
