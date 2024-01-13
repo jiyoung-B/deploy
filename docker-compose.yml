@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+  spring-app:
+    image: vvvv4449/deploy
+    ports:
+      - "8090:8080"
+    environment:
+      SPRING_DATASOURCE_URL: ${RDS_HOST}
+      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
+    networks:
+      - net-deploy
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
+    networks:
+      - net-deploy
