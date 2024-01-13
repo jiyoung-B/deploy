@@ -59,9 +59,10 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            mkdir -p /home/ubuntu/
-            echo "SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_HOST }}:3306/weather" > .env
-            echo "SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}" >> .env
-            echo "SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
-            scp .env ./docker-compose.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-            ssh ubuntu@${{ secrets.EC2_HOST }} "cd /home/ubuntu/ && sudo docker-compose up -d"
+            # EC2 인스턴스에 .env 파일 내용 직접 생성
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo 'SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_HOST }}:3306/weather' > /home/ubuntu/.env"
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo 'SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}' >> /home/ubuntu/.env"
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "echo 'SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}' >> /home/ubuntu/.env"
+            # docker-compose.yml 파일 복사 및 컨테이너 시작
+            scp -o StrictHostKeyChecking=no ./docker-compose.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+            ssh -o StrictHostKeyChecking=no ubuntu@${{ secrets.EC2_HOST }} "cd /home/ubuntu/ && sudo docker-compose up -d"
