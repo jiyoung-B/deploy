@@ -4,6 +4,8 @@ build/
 !gradle/wrapper/gradle-wrapper.jar
 !**/src/main/**/build/
 !**/src/test/**/build/
+.env
+application.properties
 
 src/main/resources/application.properties
 src/main/resources/application-db.properties
@@ -13,6 +15,7 @@ database.db
 scripts/deploy.sh
 appspec.yml
 logs/test.log
+
 
 ### STS ###
 .apt_generated
