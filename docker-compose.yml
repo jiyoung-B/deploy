@@ -5,10 +5,7 @@ services:
     image: vvvv4449/deploy
     ports:
       - "8090:8080"
-    environment:
-      SPRING_DATASOURCE_URL: ${RDS_HOST}
-      SPRING_DATASOURCE_USERNAME: ${RDS_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${RDS_PASSWORD}
+    env_file: .env
     networks:
       - net-deploy
   redis:

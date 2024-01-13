@@ -51,7 +51,7 @@ jobs:
 
       - name: Remove existing Docker image
         run: |
-          docker image rm -f ${{ secrets.DOCKER_IMAGE_NAME }} || true
+          docker image rm -f redis ${{ secrets.DOCKER_IMAGE_NAME }} || true
 
       - name: Build and push Docker image
         run: |
@@ -66,27 +66,94 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: docker-compose.yml to EC2 instance
-        uses: appleboy/scp-action@master
+
+      - name: Deploy application to EC2 instance
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ubuntu
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            script: |        
+              mkdir -p /home/ubuntu/
+              scp -r ./docker-compose.yml ./.env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+              cd /home/ubuntu/
+              name: deploy
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Java
+        uses: actions/setup-java@v3
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: "./docker-compose.yml"
-          target: "/home/ubuntu/"
+          java-version: 17
+          distribution: 'corretto'
+      #
+      #      - name: Grant execute permission to gradlew
+      #        run: chmod +x gradlew
+      #
+      #      - name: Build Spring Boot application
+      #        run: ./gradlew build -x test
+
+
+      - name: Make application.properties
+        run: |
+          cd ./src/main/resources
+          touch ./application.properties
+          echo "${{ secrets.PROPERTIES }}" > ./application.properties
+        shell: bash
+
+      - name: Create .env file
+        run: |
+          echo "SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_HOST }}:3306/weather" > .env
+          echo "SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}" >> .env
+          echo "SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
+
+      #
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+      - name: Remove existing Docker image
+        run: |
+          docker image rm -f redis ${{ secrets.DOCKER_IMAGE_NAME }} || true
+
+      - name: Build and push Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
+          docker push ${{ secrets.DOCKER_IMAGE_NAME }}
+
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
 
       - name: Deploy application to EC2 instance
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ubuntu
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            export RDS_HOST=${secrets.RDS_HOST}
-            export RDS_USERNAME=${secrets.RDS_USERNAME}
-            export RDS_PASSWORD=${secrets.RDS_PASSWORD}
-            docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} -p ${{ secrets.DOCKER_HUB_PASSWORD }}
-            docker pull ${{ secrets.DOCKER_IMAGE_NAME }}
-            cd /home/ubuntu/
-            docker-compose up -d
+          uses: appleboy/ssh-action@master
+          with:
+            host: ${{ secrets.EC2_HOST }}
+            username: ubuntu
+            key: ${{ secrets.SSH_PRIVATE_KEY }}
+            script: |
+              mkdir -p /home/ubuntu/
+              scp -r ./docker-compose.yml ./.env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+              cd /home/ubuntu/
+              docker-compose up -d
