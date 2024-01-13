@@ -52,20 +52,16 @@ jobs:
           docker build -t ${{ secrets.DOCKER_IMAGE_NAME }} .
           docker push ${{ secrets.DOCKER_IMAGE_NAME }}
 
-      - name: Create .env file
-        run: |
-          echo "SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_HOST }}:3306/weather" > .env
-          echo "SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}" >> .env
-          echo "SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
-
       - name: Deploy application to EC2 instance
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |        
+          script: |
             mkdir -p /home/ubuntu/
-            scp -r ./docker-compose.yml src/main/resources/.env ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
-            cd /home/ubuntu/
-            docker-compose up -d
+            echo "SPRING_DATASOURCE_URL=jdbc:mysql://${{ secrets.RDS_HOST }}:3306/weather" > .env
+            echo "SPRING_DATASOURCE_USERNAME=${{ secrets.RDS_USERNAME }}" >> .env
+            echo "SPRING_DATASOURCE_PASSWORD=${{ secrets.RDS_PASSWORD }}" >> .env
+            scp .env ./docker-compose.yml ubuntu@${{ secrets.EC2_HOST }}:/home/ubuntu/
+            ssh ubuntu@${{ secrets.EC2_HOST }} "cd /home/ubuntu/ && sudo docker-compose up -d"
