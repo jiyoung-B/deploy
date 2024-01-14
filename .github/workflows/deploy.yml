@@ -68,8 +68,8 @@ jobs:
           port: 22
           source: |
             mkdir -p /home/ubuntu/
+            ./.env 
             ./docker-compose.yml
-             ./.env
           target: /home/ubuntu
 
 
