@@ -22,19 +22,19 @@ jobs:
           java-version: 17
           distribution: 'corretto'
 
-      - name: Grant execute permission to gradlew
-        run: chmod +x gradlew
-
-      - name: Build Spring Boot application
-        run: ./gradlew build -x test
-
-
       - name: Make application.properties
         run: |
           cd ./src/main/resources
           touch ./application.properties
           echo "${{ secrets.PROPERTIES }}" > ./application.properties
         shell: bash
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot application
+        run: ./gradlew build -x test
+
 
       #
       - name: Log in to Docker Hub
