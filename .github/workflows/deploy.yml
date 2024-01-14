@@ -66,9 +66,7 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
-          source: |
-            mkdir -p /home/ubuntu/
-            ./.env
+          source: ./.env
           target: /home/ubuntu
 
 
