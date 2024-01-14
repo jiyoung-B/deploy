@@ -67,8 +67,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           source: |
+            mkdir -p /home/ubuntu/
             ./docker-compose.yml
-            ./.env
+             ./.env
           target: /home/ubuntu
 
 
