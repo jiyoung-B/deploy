@@ -21,12 +21,12 @@ jobs:
         with:
           java-version: 17
           distribution: 'corretto'
-#
-#      - name: Grant execute permission to gradlew
-#        run: chmod +x gradlew
-#
-#      - name: Build Spring Boot application
-#        run: ./gradlew build -x test
+
+      - name: Grant execute permission to gradlew
+        run: chmod +x gradlew
+
+      - name: Build Spring Boot application
+        run: ./gradlew build -x test
 
 
       - name: Make application.properties
